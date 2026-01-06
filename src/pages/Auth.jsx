@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   /* ================= STATES ================= */
 
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -37,7 +39,19 @@ export default function Auth() {
     setLoginErrors(errors);
     if (Object.keys(errors).length !== 0) return;
 
-    console.log("LOGIN DATA:", loginData);
+    // ✅ GET ROLE FROM LOCALSTORAGE
+    const role = localStorage.getItem("userRole");
+
+    if (!role) {
+      alert("Please register first");
+      return;
+    }
+
+    console.log("LOGIN DATA:", loginData, "ROLE:", role);
+
+    navigate("/dashboard", {
+      state: { role },
+    });
 
     setLoginData({ email: "", password: "" });
   };
@@ -53,19 +67,16 @@ export default function Auth() {
     e.preventDefault();
     let errors = {};
 
-    // Name validation
     if (!/^[A-Za-z\s]+$/.test(registerData.name)) {
       errors.name = "Name should not contain numbers";
     }
 
-    // ✅ STRICT EMAIL VALIDATION (LOWERCASE + GMAIL)
     if (registerData.email !== registerData.email.toLowerCase()) {
       errors.email = "Email must be in lowercase only";
     } else if (!registerData.email.endsWith("@gmail.com")) {
       errors.email = "Email must end with @gmail.com";
     }
 
-    // Password validation
     if (
       !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(
         registerData.password
@@ -80,12 +91,21 @@ export default function Auth() {
 
     console.log("REGISTER DATA:", registerData);
 
+    // ✅ SAVE ROLE
+    localStorage.setItem(
+      "userRole",
+      registerData.role.toLowerCase()
+    );
+
     setRegisterData({
       name: "",
       email: "",
       password: "",
       role: "Freelancer",
     });
+
+    alert("Registered successfully! Now login.");
+    setIsSignUp(false);
   };
 
   /* ================= UI ================= */
@@ -131,7 +151,7 @@ export default function Auth() {
                 )}
               </div>
 
-              <button className="w-full bg-emerald-600 text-white py-3 rounded-full hover:bg-emerald-700">
+              <button className="w-full bg-emerald-600 text-white py-3 rounded-full">
                 SIGN IN
               </button>
             </form>
@@ -143,51 +163,31 @@ export default function Auth() {
               Create Account
             </h2>
 
-            <form
-              onSubmit={handleRegisterSubmit}
-              className="w-full max-w-sm space-y-3"
-            >
-              <div>
-                <input
-                  name="name"
-                  value={registerData.name}
-                  onChange={handleRegisterChange}
-                  placeholder="Name"
-                  className="w-full px-4 py-3 bg-gray-100 rounded-lg"
-                />
-                {registerErrors.name && (
-                  <p className="text-red-500 text-sm">{registerErrors.name}</p>
-                )}
-              </div>
+            <form onSubmit={handleRegisterSubmit} className="w-full max-w-sm space-y-3">
+              <input
+                name="name"
+                value={registerData.name}
+                onChange={handleRegisterChange}
+                placeholder="Name"
+                className="w-full px-4 py-3 bg-gray-100 rounded-lg"
+              />
 
-              <div>
-                <input
-                  name="email"
-                  value={registerData.email}
-                  onChange={handleRegisterChange}
-                  placeholder="Email (@gmail.com)"
-                  className="w-full px-4 py-3 bg-gray-100 rounded-lg"
-                />
-                {registerErrors.email && (
-                  <p className="text-red-500 text-sm">{registerErrors.email}</p>
-                )}
-              </div>
+              <input
+                name="email"
+                value={registerData.email}
+                onChange={handleRegisterChange}
+                placeholder="Email (@gmail.com)"
+                className="w-full px-4 py-3 bg-gray-100 rounded-lg"
+              />
 
-              <div>
-                <input
-                  type="password"
-                  name="password"
-                  value={registerData.password}
-                  onChange={handleRegisterChange}
-                  placeholder="Password"
-                  className="w-full px-4 py-3 bg-gray-100 rounded-lg"
-                />
-                {registerErrors.password && (
-                  <p className="text-red-500 text-sm">
-                    {registerErrors.password}
-                  </p>
-                )}
-              </div>
+              <input
+                type="password"
+                name="password"
+                value={registerData.password}
+                onChange={handleRegisterChange}
+                placeholder="Password"
+                className="w-full px-4 py-3 bg-gray-100 rounded-lg"
+              />
 
               <select
                 name="role"
@@ -199,7 +199,7 @@ export default function Auth() {
                 <option>Client</option>
               </select>
 
-              <button className="w-full bg-emerald-600 text-white py-3 rounded-full hover:bg-emerald-700">
+              <button className="w-full bg-emerald-600 text-white py-3 rounded-full">
                 SIGN UP
               </button>
             </form>
@@ -214,27 +214,21 @@ export default function Auth() {
           {!isSignUp ? (
             <>
               <h2 className="text-4xl font-bold mb-4">Welcome Back!</h2>
-              <p className="text-center mb-6 text-sm">
-                To keep connected with us <br /> please login with your personal info
-              </p>
               <button
                 onClick={() => setIsSignUp(true)}
-                className="border border-white px-8 py-2 rounded-full hover:bg-white hover:text-emerald-600"
+                className="border border-white px-8 py-2 rounded-full"
               >
-                SIGN IN
+                SIGN UP
               </button>
             </>
           ) : (
             <>
               <h2 className="text-4xl font-bold mb-4">Hello, Friend!</h2>
-              <p className="text-center mb-6 text-sm">
-                Enter your personal details <br /> and start your journey with us
-              </p>
               <button
                 onClick={() => setIsSignUp(false)}
-                className="border border-white px-8 py-2 rounded-full hover:bg-white hover:text-emerald-600"
+                className="border border-white px-8 py-2 rounded-full"
               >
-                SIGN UP
+                SIGN IN
               </button>
             </>
           )}
